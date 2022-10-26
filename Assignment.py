@@ -170,6 +170,34 @@ class CSP:
         iterations of the loop.
         """
         # TODO: YOUR CODE HERE
+        def complete(assignment):
+            for i in assignment:
+                if len(i) != 1:
+                    return False
+            return complete
+
+        if complete(assignment):
+            return assignment
+        
+        var = self.select_unassigned_variable(assignment)
+        for value in self.Order_Domain_Value(var, assignment):
+            assignmentCopy = copy.deepcopy(self.domains)
+            if value consistent assignmentCopy:
+                assignmentCopy.push((var = value)) #Eller replace vil jeg heller si
+                inference = self.inference(var, assignment)
+                if inference:
+                    self.push(inference)
+                    result = self.backtrack(assignment)
+                    if result != False:
+                        return result
+                    self.pop(inference)
+                assignmentCopy.remove(var = value) 
+        
+        return False
+
+
+
+
         pass
 
     def select_unassigned_variable(self, assignment):
@@ -181,6 +209,10 @@ class CSP:
         # TODO: YOUR CODE HERE
         pass
 
+    def Order_Domain_Value(self, var, assignment):
+        #Usikker
+        pass
+
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
         'assignment' is the current partial assignment, that contains
@@ -188,6 +220,16 @@ class CSP:
         is the initial queue of arcs that should be visited.
         """
         # TODO: YOUR CODE HERE
+
+        while len(queue) > 0:
+            (Xi, Xj) = queue.pop()
+            if (self.revise(assignment, Xi, Xj)):
+                if len(assignment.get(Xi)) == 0:
+                    return False
+
+                for Xk in self.get_all_neighboring_arcs(Xi).remove(Xj):
+                    queue.push((Xk, Xi))
+        return True
         pass
 
     def revise(self, assignment, i, j):
@@ -199,7 +241,17 @@ class CSP:
         between i and j, the value should be deleted from i's list of
         legal values in 'assignment'.
         """
-        # TODO: YOUR CODE HERE
+        # TODO: YOUR CODE HERE 
+        """
+        Usikker om jeg sammenligner Dj og riktig constraints
+        """
+        revised =False
+        for X in assignment.get(i):
+            if bool(set(assignment.get(j)) & set(self.constraints[i][j])):     # self.constraints[i][j] is a list of legal value pairs for    Sammenlingingen: https://stackoverflow.com/questions/3170055/test-if-lists-share-any-items-in-python
+                assignment.get(i).pop(X)                                       # the variable pair (i, j)
+                revised = True
+
+        return revised
         pass
 
 
@@ -277,3 +329,15 @@ def print_sudoku_solution(solution):
         print("")
         if row == 2 or row == 5:
             print('------+-------+------')
+
+
+def main():
+    csp = create_sudoku_csp("easy.txt")
+    solution = csp.backtracking_search()
+    print_sudoku_solution(solution)
+    print("hei")
+
+    #backtracking_search(self)
+
+if __name__ == "__main__":
+    main()
