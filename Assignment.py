@@ -18,6 +18,12 @@ class CSP:
         # the variable pair (i, j)
         self.constraints = {}
 
+        #Keeps count of backtrack calls.
+        self.backtrackCount = 0
+
+        #Keeps count of backtrack calls that ends in failure.
+        self.failures = 0
+
     def add_variable(self, name: str, domain: list):
         """Add a new variable to the CSP.
 
@@ -170,35 +176,31 @@ class CSP:
         iterations of the loop.
         """
         # TODO: YOUR CODE HERE
-        def complete(assignment):
-            for i in assignment:
-                if len(i) != 1:
-                    return False
-            return complete
-
-        if complete(assignment):
+        
+        complete = True
+        for key, var in assignment.items():
+            if not len(var) == 1:
+                complete = False
+        
+        if complete:
             return assignment
-        
+
+        self.backtrackCount += 1
+
         var = self.select_unassigned_variable(assignment)
-        for value in self.Order_Domain_Value(var, assignment):
-            assignmentCopy = copy.deepcopy(self.domains)
-            if value consistent assignmentCopy:
-                assignmentCopy.push((var = value)) #Eller replace vil jeg heller si
-                inference = self.inference(var, assignment)
-                if inference:
-                    self.push(inference)
-                    result = self.backtrack(assignment)
-                    if result != False:
-                        return result
-                    self.pop(inference)
-                assignmentCopy.remove(var = value) 
-        
-        return False
+        for val in assignment[var]:
+            assignmentCopy = copy.deepcopy(assignment)
+            assignmentCopy[var] = val
 
+            inference = self.inference(assignmentCopy, self.get_all_arcs())
 
+            if inference:
+                result = self.backtrack(assignmentCopy)
+                if result:
+                    return result
+        self.failures += 1
+        return
 
-
-        pass
 
     def select_unassigned_variable(self, assignment):
         """The function 'Select-Unassigned-Variable' from the pseudocode
@@ -207,11 +209,9 @@ class CSP:
         of legal values has a length greater than one.
         """
         # TODO: YOUR CODE HERE
-        pass
+        return min(assignment.keys(),
+            key=lambda var: float("inf") if len(assignment[var]) < 2 else len(assignment[var]))
 
-    def Order_Domain_Value(self, var, assignment):
-        #Usikker
-        pass
 
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
@@ -221,16 +221,16 @@ class CSP:
         """
         # TODO: YOUR CODE HERE
 
-        while len(queue) > 0:
-            (Xi, Xj) = queue.pop()
+        while not len(queue) <= 0:
+            Xi, Xj = queue.pop()
             if (self.revise(assignment, Xi, Xj)):
-                if len(assignment.get(Xi)) == 0:
+                if len(assignment[Xi]) == 0:
                     return False
-
-                for Xk in self.get_all_neighboring_arcs(Xi).remove(Xj):
-                    queue.push((Xk, Xi))
+                
+                for Xk, _ in self.get_all_neighboring_arcs(Xi):
+                    if Xk != Xj:
+                        queue.append([Xk, Xi])
         return True
-        pass
 
     def revise(self, assignment, i, j):
         """The function 'Revise' from the pseudocode in the textbook.
@@ -242,17 +242,17 @@ class CSP:
         legal values in 'assignment'.
         """
         # TODO: YOUR CODE HERE 
-        """
-        Usikker om jeg sammenligner Dj og riktig constraints
-        """
-        revised =False
-        for X in assignment.get(i):
-            if bool(set(assignment.get(j)) & set(self.constraints[i][j])):     # self.constraints[i][j] is a list of legal value pairs for    Sammenlingingen: https://stackoverflow.com/questions/3170055/test-if-lists-share-any-items-in-python
-                assignment.get(i).pop(X)                                       # the variable pair (i, j)
+        revised = False
+        for X in assignment[i]:
+            arcs = list(self.get_all_possible_pairs([X], assignment[j]))
+            if len(list(filter(lambda arc: arc in arcs, self.constraints[i][j]))) < 1:
                 revised = True
-
+                if X in assignment[i]:
+                   # print(assignment[i], end=" ")
+                    #print(X)
+                    if not (isinstance( assignment[i], str)):
+                        assignment[i].remove(X)
         return revised
-        pass
 
 
 def create_map_coloring_csp():
@@ -334,10 +334,35 @@ def print_sudoku_solution(solution):
 def main():
     csp = create_sudoku_csp("easy.txt")
     solution = csp.backtracking_search()
+    print("\nEasy Sudoku")
+    print("Backtracks: " + str(csp.backtrackCount))
+    print("Backtrack failures: " + str(csp.failures))
     print_sudoku_solution(solution)
-    print("hei")
 
-    #backtracking_search(self)
+
+    csp = create_sudoku_csp("medium.txt")
+    solution = csp.backtracking_search()
+    print("\nMedium Sudoku")
+    print("Backtracks: " + str(csp.backtrackCount))
+    print("Backtrack failures: " + str(csp.failures))
+    print_sudoku_solution(solution)
+
+
+    csp = create_sudoku_csp("hard.txt")
+    solution = csp.backtracking_search()
+    print("\nHard Sudoku")
+    print("Backtracks: " + str(csp.backtrackCount))
+    print("Backtrack failures: " + str(csp.failures))
+    print_sudoku_solution(solution)
+
+
+    csp = create_sudoku_csp("veryhard.txt")
+    solution = csp.backtracking_search()
+    print("\nVery hard Sudoku")
+    print("Backtracks: " + str(csp.backtrackCount))
+    print("Backtrack failures: " + str(csp.failures))
+    print_sudoku_solution(solution)
+
 
 if __name__ == "__main__":
     main()
