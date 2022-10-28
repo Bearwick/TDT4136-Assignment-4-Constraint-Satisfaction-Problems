@@ -178,6 +178,7 @@ class CSP:
         # TODO: YOUR CODE HERE
         
         complete = True
+        #Checks if all variables have lists of length 1, i.e., only one possible value.
         for key, var in assignment.items():
             if not len(var) == 1:
                 complete = False
@@ -185,13 +186,15 @@ class CSP:
         if complete:
             return assignment
 
-        self.backtrackCount += 1
+        self.backtrackCount += 1 #Counts the number of backtrack calls.
 
+        #Returns one variable with more than one legal value.
         var = self.select_unassigned_variable(assignment)
+        #Iterates thorugh the above variable legal values. 
         for val in assignment[var]:
             assignmentCopy = copy.deepcopy(assignment)
             assignmentCopy[var] = val
-
+            
             inference = self.inference(assignmentCopy, self.get_all_arcs())
 
             if inference:
@@ -209,6 +212,7 @@ class CSP:
         of legal values has a length greater than one.
         """
         # TODO: YOUR CODE HERE
+        #Returns one variable witl legal value list greater than one.
         return min(assignment.keys(),
             key=lambda var: float("inf") if len(assignment[var]) < 2 else len(assignment[var]))
 
@@ -220,7 +224,7 @@ class CSP:
         is the initial queue of arcs that should be visited.
         """
         # TODO: YOUR CODE HERE
-
+        #Checks all arcs in queue and uses revise to delete legal values. 
         while not len(queue) <= 0:
             Xi, Xj = queue.pop()
             if (self.revise(assignment, Xi, Xj)):
@@ -242,14 +246,13 @@ class CSP:
         legal values in 'assignment'.
         """
         # TODO: YOUR CODE HERE 
+        #Deletes legal values for a given variable if the constraint between two arcs is not met.
         revised = False
         for X in assignment[i]:
             arcs = list(self.get_all_possible_pairs([X], assignment[j]))
             if len(list(filter(lambda arc: arc in arcs, self.constraints[i][j]))) < 1:
                 revised = True
                 if X in assignment[i]:
-                   # print(assignment[i], end=" ")
-                    #print(X)
                     if not (isinstance( assignment[i], str)):
                         assignment[i].remove(X)
         return revised
